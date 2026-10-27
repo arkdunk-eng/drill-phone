@@ -227,7 +227,7 @@
           c.stopTone(); c.stopTone = null;
           setStatus(result.mode === 'busy' ? '話し中' : '応答がありません');
           c.timers.push(setTimeout(function () { finish(result.mode === 'busy' ? '話し中' : '出ない'); },3000));
-        },result.mode === 'busy' ? 5000 : 30000));
+        },result.mode === 'busy' ? 5000 : 15000));
         return;
       }
       await startMic(c);
