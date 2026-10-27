@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var api = PhoneApi.create('a'), selectedCall = null;
+  var api = PhoneApi.create('a'), selectedCall = null, selectedRegions = [];
   var $ = function (id) { return document.getElementById(id); };
   function time(ms) { return new Date(ms).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
   function duration(seconds) { return Math.floor(seconds/60) + '分' + seconds%60 + '秒'; }
@@ -22,7 +22,12 @@
   async function refresh() {
     try {
       var data = await api.get('admin'); $('error').textContent = '';
+      selectedRegions = data.regions || [];
+      document.querySelectorAll('#regions button').forEach(function (button) { button.classList.toggle('active', selectedRegions.indexOf(button.dataset.region) >= 0); });
       document.querySelectorAll('#scenes button').forEach(function (button) { button.classList.toggle('active',Number(button.dataset.scene) === data.scene); });
+      var missing = data.missing || [];
+      $('missing').hidden = missing.length === 0;
+      $('missing').textContent = missing.length ? 'この場面の台本が無い電話先（かけると「出ない」になります）: ' + missing.map(function (d) { return d.name; }).join('、') : '';
       $('total').textContent = (data.totalSeconds/60).toFixed(1) + '分';
       $('calls').replaceChildren();
       (data.calls || []).forEach(function (call) {
@@ -34,6 +39,18 @@
       });
     } catch (e) { $('error').textContent = '運営画面を更新できません: ' + e.message; }
   }
+  document.querySelectorAll('#regions button').forEach(function (button) {
+    button.onclick = async function () {
+      var region = button.dataset.region;
+      var regions = Array.from(document.querySelectorAll('#regions button')).map(function (b) { return b.dataset.region; }).filter(function (name) {
+        return name === region ? selectedRegions.indexOf(name) < 0 : selectedRegions.indexOf(name) >= 0;
+      });
+      var question = regions.length ? '表示する地域を「' + regions.join('、') + '」にしますか？' : 'すべての地域を表示しますか？';
+      if (!confirm(question)) return;
+      try { await api.post({action:'setRegions',regions:regions}); await refresh(); }
+      catch (e) { $('error').textContent = '地域を切り替えられません: ' + e.message; }
+    };
+  });
   document.querySelectorAll('#scenes button').forEach(function (button) {
     button.onclick = async function () {
       var scene = Number(button.dataset.scene);

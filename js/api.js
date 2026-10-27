@@ -1,7 +1,7 @@
 (function (root) {
   function create(keyName) {
     var key = new URLSearchParams(root.location.search).get(keyName) || '';
-    var messages = {forbidden:'鍵が違います。', server:'電話の仕組みでエラーが起きました。運営に知らせてください。', 'not-allowed':'このテーブルからはかけられません。', 'not-found':'記録が見つかりません。', 'bad-scene':'場面の値が正しくありません。', 'bad-ending':'通話の終わり方が正しくありません。', 'bad-action':'操作が正しくありません。', 'bad-json':'送信内容が正しくありません。'};
+    var messages = {forbidden:'鍵が違います。', server:'電話の仕組みでエラーが起きました。運営に知らせてください。', 'not-allowed':'このテーブルからはかけられません。', 'not-found':'記録が見つかりません。', 'bad-scene':'場面の値が正しくありません。', 'bad-region':'地域の値が正しくありません。', 'bad-ending':'通話の終わり方が正しくありません。', 'bad-action':'操作が正しくありません。', 'bad-json':'送信内容が正しくありません。'};
     function check(result) { if (result.error) throw new Error(messages[result.error] || '処理できませんでした。'); return result; }
     async function get(action, params) {
       var query = new URLSearchParams(Object.assign({action:action}, params || {}));

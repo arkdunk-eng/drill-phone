@@ -28,7 +28,7 @@
   }
   function renderContacts() {
     var list = $('contacts-list'); list.replaceChildren();
-    ['卸','医療機器','医療ガス','上位本部'].forEach(function (kind) {
+    ['卸','医療機器','医療ガス','血液','上位本部'].forEach(function (kind) {
       var entries = contacts.filter(function (d) { return d.kind === kind; }); if (!entries.length) return;
       var heading = document.createElement('h2'); heading.className = 'section-heading'; heading.textContent = kind; list.appendChild(heading);
       var card = document.createElement('div'); card.className = 'card';
