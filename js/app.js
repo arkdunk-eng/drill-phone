@@ -5,6 +5,14 @@
   function error(message) { $('error').textContent = message; $('error').hidden = false; setTimeout(function () { $('error').hidden = true; }, 8000); }
   function formatTime(seconds) { seconds = Math.max(0,Math.floor(seconds)); return Math.floor(seconds/60) + ':' + String(seconds%60).padStart(2,'0'); }
   function formatStart(ms) { return new Date(ms).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}); }
+  var kindPaths = {
+    '卸':'<rect x="4" y="6" width="16" height="15" rx="1"/><path d="M8 6V3h8v3M8 10h2m4 0h2M8 14h2m4 0h2M11 21v-4h2v4"/>',
+    '医療機器':'<path d="M12 3v18M3 12h18"/>',
+    '医療ガス':'<rect x="7" y="6" width="10" height="15" rx="3"/><path d="M10 6V3h4v3M12 10v7"/>',
+    '血液':'<path d="M12 3C9 8 5 12 5 16a7 7 0 0 0 14 0c0-4-4-8-7-13Z"/>',
+    '上位本部':'<path d="M5 21V5l7-2 7 2v16M3 21h18M9 8h2m2 0h2M9 12h2m2 0h2M11 21v-5h2v5"/>'
+  };
+  function kindIcon(kind) { return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + kindPaths[kind] + '</svg>'; }
   function view(name) {
     ['table','contacts','history','detail'].forEach(function (n) { $(n+'-view').hidden = n !== name; });
     $('tabs').hidden = name === 'table';
@@ -15,7 +23,12 @@
   function renderTables() {
     var list = $('table-list'); list.replaceChildren();
     tables.forEach(function (t) {
-      var button = document.createElement('button'); button.className = 'row'; button.type = 'button'; button.textContent = t.name;
+      var button = document.createElement('button'); button.className = 'row'; button.type = 'button';
+      var initial = document.createElement('span'); initial.className = 'table-initial'; initial.textContent = t.name.charAt(0);
+      var copy = document.createElement('span'); copy.className = 'row-copy';
+      var label = document.createElement('strong'); label.className = 'name'; label.textContent = t.name;
+      var role = document.createElement('span'); role.className = 'sub'; role.textContent = t.role;
+      copy.append(label,role); button.append(initial,copy);
       button.onclick = function () { selectTable(t); }; list.appendChild(button);
     });
   }
@@ -30,13 +43,21 @@
     var list = $('contacts-list'); list.replaceChildren();
     ['卸','医療機器','医療ガス','血液','上位本部'].forEach(function (kind) {
       var entries = contacts.filter(function (d) { return d.kind === kind; }); if (!entries.length) return;
-      var heading = document.createElement('h2'); heading.className = 'section-heading'; heading.textContent = kind; list.appendChild(heading);
+      var heading = document.createElement('h2'); heading.className = 'section-heading';
+      var headingIcon = document.createElement('span'); headingIcon.className = 'heading-icon'; headingIcon.innerHTML = kindIcon(kind);
+      var headingName = document.createElement('span'); headingName.textContent = kind;
+      var count = document.createElement('span'); count.className = 'count'; count.textContent = entries.length + '件';
+      heading.append(headingIcon,headingName,count); list.appendChild(heading);
       var card = document.createElement('div'); card.className = 'card';
       entries.forEach(function (d) {
         var button = document.createElement('button'); button.className = 'row'; button.type = 'button';
-        var label = document.createElement('span'); label.className = 'name'; label.textContent = d.name;
+        var kindMark = document.createElement('span'); kindMark.className = 'kind-mark'; kindMark.innerHTML = kindIcon(kind);
+        var copy = document.createElement('span'); copy.className = 'row-copy';
+        var label = document.createElement('strong'); label.className = 'name'; label.textContent = d.name;
+        var tag = document.createElement('span'); tag.className = 'kind-tag'; tag.textContent = kind;
+        copy.append(label,tag);
         var icon = document.createElement('span'); icon.className = 'phone-icon'; icon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 2.5 10 6l-2 3c1.5 3 3 4.5 6 6l3-2 3.5 3.4-1.4 3c-.4.9-1.4 1.5-2.4 1.3C9 19.6 4.4 15 3.2 7.3c-.2-1 .4-2 1.3-2.4z" fill="currentColor"/></svg>';
-        button.append(label,icon); button.onclick = function () { dial(d); }; card.appendChild(button);
+        button.append(kindMark,copy,icon); button.onclick = function () { dial(d); }; card.appendChild(button);
       }); list.appendChild(card);
     });
   }
@@ -48,7 +69,7 @@
       if (!rows.length) { list.textContent = '通話履歴はまだありません。'; return; }
       rows.forEach(function (row) {
         var button = document.createElement('button'); button.className = 'row'; button.type = 'button';
-        var text = document.createElement('span'), name = document.createElement('span'), sub = document.createElement('span');
+        var text = document.createElement('span'), name = document.createElement('strong'), sub = document.createElement('span'); text.className = 'row-copy'; name.className = 'name';
         name.textContent = (contacts.find(function (c) { return c.id === row.destinationId; }) || {}).name || row.destinationId;
         sub.className = 'sub'; sub.textContent = formatStart(row.startedMs) + '・' + Math.floor(row.seconds/60) + '分' + row.seconds%60 + '秒';
         text.append(name,sub); button.appendChild(text);
